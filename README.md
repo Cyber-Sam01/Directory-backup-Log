@@ -1,2 +1,93 @@
 # Directory-backup-Log
-A simple Bash script to create timestamped tar.gz backups of a directory and log the success or failure.
+#A simple Bash script to create timestamped tar.gz backups of a directory and log the success or failure.
+
+#!/bin/bash
+
+# Log Configuration
+LOG_FILE="/var/log/custom_backup.log"
+
+# Function to write log messages
+log_message() {
+    local level="$1"
+    local message="$2"
+    # Format: [YYYY-MM-DD HH:MM:SS] [LEVEL] - Message
+    local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    local log_entry="[$timestamp] [$level] - $message"
+
+    # Check for write permission to the log file.
+    if ! echo "" >> "$LOG_FILE" 2>/dev/null; then
+        echo "WARNING: Permission denied. Cannot write to log file: $LOG_FILE" >
+        echo "Log Entry: $log_entry" >&2 # Echo the log to stderr
+    else
+        # Write the actual log entry
+        echo "$log_entry" >> "$LOG_FILE"
+    fi
+}
+
+
+# Source request
+echo "Please enter the source directory:"
+read SOURCE_DIR
+
+# Destination request
+echo "Please enter the destination directory:"
+read DEST_DIR
+
+# source validation
+if [ ! -d "$SOURCE_DIR" ]; then
+    echo "Error: Source directory '$SOURCE_DIR' does not exist."
+    log_message "ERROR" "Source directory '$SOURCE_DIR' not found."
+       exit 1
+fi
+
+# destination validation
+if [ ! -d "$DEST_DIR" ]; then
+    echo "Error: Destination directory '$DEST_DIR' does not exist."
+    log_message "ERROR" "Destination directory '$DEST_DIR' not found."
+    exit 1
+fi
+
+TIMESTAMP=$(date +"%Y-%m-%d_%H:%M:%S")
+# base name of the source directory
+SOURCE_BASENAME=$(basename "$SOURCE_DIR")
+# Archive
+ARCHIVE_NAME="${SOURCE_BASENAME}_${TIMESTAMP}.tar.gz"
+
+# Archive in a temporary location
+TEMP_ARCHIVE_PATH="/tmp/$ARCHIVE_NAME"
+
+# Get the parent directory of the source and the source's own name
+# This allows 'tar' to archive the directory itself, not just its contents
+
+PARENT_DIR=$(dirname "$SOURCE_DIR")
+SOURCE_NAME=$(basename "$SOURCE_DIR")
+
+echo "Starting backup of '$SOURCE_DIR'..."
+log_message "INFO" "Backup started for source: $SOURCE_DIR"
+
+# tar.gz archive
+if tar -czf "$TEMP_ARCHIVE_PATH" -C "$PARENT_DIR" "$SOURCE_NAME"; then
+    # If tar is successful, move the archive to the destination
+    echo "Archive created: $TEMP_ARCHIVE_PATH"
+    if mv "$TEMP_ARCHIVE_PATH" "$DEST_DIR/"; then
+        echo "Backup successful!"
+        echo "Archive '$ARCHIVE_NAME' moved to '$DEST_DIR'"
+        log_message "SUCCESS" "Backup of '$SOURCE_DIR' completed. Archive: $DES>
+        exit 0
+    else
+        # Log move failure
+        echo "Error: Failed to move archive '$TEMP_ARCHIVE_PATH' to '$DEST_DIR'
+        log_message "ERROR" "Archive created at '$TEMP_ARCHIVE_PATH' but 'mv' t>
+        rm -f "$TEMP_ARCHIVE_PATH" # Clean up temp file
+        exit 5
+    fi
+else
+    # Log tar failure
+    echo "Error: Backup failed during archive creation (tar command failed)." >>
+    log_message "ERROR" "Backup of '$SOURCE_DIR' failed. 'tar' command failed."
+    rm -f "$TEMP_ARCHIVE_PATH" # Clean up any partial temp file
+    exit 4
+fi
+
+    exit 1
+fi
