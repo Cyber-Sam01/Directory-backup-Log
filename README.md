@@ -33,14 +33,14 @@ read SOURCE_DIR
 echo "Please enter the destination directory:"
 read DEST_DIR
 
-# source validation
+# Source validation
 if [ ! -d "$SOURCE_DIR" ]; then
     echo "Error: Source directory '$SOURCE_DIR' does not exist."
     log_message "ERROR" "Source directory '$SOURCE_DIR' not found."
        exit 1
 fi
 
-# destination validation
+# Destination validation
 if [ ! -d "$DEST_DIR" ]; then
     echo "Error: Destination directory '$DEST_DIR' does not exist."
     log_message "ERROR" "Destination directory '$DEST_DIR' not found."
@@ -50,15 +50,13 @@ fi
 TIMESTAMP=$(date +"%Y-%m-%d_%H:%M:%S")
 # base name of the source directory
 SOURCE_BASENAME=$(basename "$SOURCE_DIR")
-# Archive
+# Archive name
 ARCHIVE_NAME="${SOURCE_BASENAME}_${TIMESTAMP}.tar.gz"
 
 # Archive in a temporary location
 TEMP_ARCHIVE_PATH="/tmp/$ARCHIVE_NAME"
 
-# Get the parent directory of the source and the source's own name
-# This allows 'tar' to archive the directory itself, not just its contents
-
+# Parent directory of the source
 PARENT_DIR=$(dirname "$SOURCE_DIR")
 SOURCE_NAME=$(basename "$SOURCE_DIR")
 
@@ -67,27 +65,23 @@ log_message "INFO" "Backup started for source: $SOURCE_DIR"
 
 # tar.gz archive
 if tar -czf "$TEMP_ARCHIVE_PATH" -C "$PARENT_DIR" "$SOURCE_NAME"; then
-    # If tar is successful, move the archive to the destination
     echo "Archive created: $TEMP_ARCHIVE_PATH"
     if mv "$TEMP_ARCHIVE_PATH" "$DEST_DIR/"; then
         echo "Backup successful!"
         echo "Archive '$ARCHIVE_NAME' moved to '$DEST_DIR'"
-        log_message "SUCCESS" "Backup of '$SOURCE_DIR' completed. Archive: $DES>
+        log_message "SUCCESS" "Backup of '$SOURCE_DIR' completed. Archive: $DEST_DIR/$ARCHIVE_NAME"
         exit 0
     else
         # Log move failure
         echo "Error: Failed to move archive '$TEMP_ARCHIVE_PATH' to '$DEST_DIR'
-        log_message "ERROR" "Archive created at '$TEMP_ARCHIVE_PATH' but 'mv' t>
+        log_message "ERROR" "Archive created at '$TEMP_ARCHIVE_PATH' but 'mv' to '$DEST_DIR' failed."
         rm -f "$TEMP_ARCHIVE_PATH" # Clean up temp file
         exit 5
     fi
 else
     # Log tar failure
-    echo "Error: Backup failed during archive creation (tar command failed)." >>
+    echo "Error: Backup failed during archive creation (tar command failed)." >&2
     log_message "ERROR" "Backup of '$SOURCE_DIR' failed. 'tar' command failed."
     rm -f "$TEMP_ARCHIVE_PATH" # Clean up any partial temp file
     exit 4
-fi
-
-    exit 1
 fi
