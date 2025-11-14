@@ -2,9 +2,9 @@ Directory Backup & Log Script
 
 A Bash script to automate directory backups in a simple and reliable way. The script accepts a source and a destination directory as command-line arguments.
 It then handles the entire backup process:
-    1. Creates a timestamped .tar.gz archive of the source directory.
-    2. Securely moves the completed archive to the destination.
-    3. Writes a detailed log entry to /var/log/custom_backup.log, clearly stating if the backup was a 'SUCCESS' or 'FAILURE'.
+1. Creates a timestamped .tar.gz archive of the source directory.
+2. Securely moves the completed archive to the destination.
+3. Writes a detailed log entry to **/var/log/custom_backup.log**, clearly stating if the backup was a 'SUCCESS' or 'FAILURE'.
 
 
 Features
@@ -15,20 +15,19 @@ Features
 
 Usage
 1. Make the script executable:
-       chmod +x backup.sh
-
+      **chmod +x backup.sh**
 2. Run the script:
-   ./backup.sh
+   **./backup.sh**
    The script will then interactively ask you for the source and destination directories.
 
 3. Run with sudo (for logging):
    To write to /var/log/, the script needs administrator privileges.
-       sudo ./backup.sh
+       **sudo ./backup.sh**
    Note: If you run it without sudo, it will print a warning and write the log message to your terminal instead.
 
 4. Check the logs:
    You can monitor all backup activity by checking the log file:
-   tail -f /var/log/custom_backup.log
+  **tail -f /var/log/custom_backup.log**
 
 
 Script code 
